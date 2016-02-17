@@ -1,0 +1,6 @@
+#*
+*.o
+*~
+gen_usernames
+usernames.txt
+usernames.txt.tmp
