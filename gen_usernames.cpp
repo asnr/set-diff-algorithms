@@ -1,3 +1,6 @@
+/* Author: Dustin Sallings.
+   Original copy: https://gist.github.com/dustin/1189242 */
+
 #include <string>
 #include <iostream>
 #include <algorithm>
