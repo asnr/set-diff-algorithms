@@ -1,6 +1,9 @@
 #*
 *.o
 *~
+*.pyc
 gen_usernames
 usernames.txt
+usernames_100M.txt
 usernames.txt.tmp
+soln_2
