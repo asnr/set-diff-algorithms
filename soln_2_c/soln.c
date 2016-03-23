@@ -22,23 +22,28 @@ uint32_t is_in(Dict, char*);  // 1 if in, 0 if not
 int main(int argc, char *argv[])
 {
     char *filename = argv[1];
+    uint64_t dict_size;
+    if (argc > 2) {
+        char *end;
+        dict_size = strtol(argv[2], &end, 10);
+    } else {
+        dict_size = 200e6;
+    }
+    
+    /***** Populate dictionary ******/
 
-    Dict dict = init_dict(2e6);
-
-    printf("filename = %s\n", filename);
+    Dict dict = init_dict(dict_size);
 
     uint32_t max_file_length = 1e9;
+    // + 1 is for defensive terminating '\0' in case input doesn't end
+    // with newline
     char *file_buf = (char *) calloc(max_file_length + 1, sizeof(char));
-    char *end_of_file_buf = file_buf + max_file_length + 1;
-    // uint32_t max_line_length = 511;
-    // char line_buf[max_line_length + 1];
-
+    char *end_of_file_buf = file_buf + max_file_length;
+    
     char *start_of_line = file_buf;
     char *file_it = file_buf;
     uint32_t line_idx = 0;
-    // uint32_t char_idx = 0;
-    // uint32_t col_idx = 0;
-
+    
     FILE *fp = fopen(filename, "r");
     char ch = getc(fp);
     // This assumes last character is a newline '\n'
@@ -51,36 +56,63 @@ int main(int argc, char *argv[])
         if (ch == '\n') {
             (*file_it) = '\0';
             
-            // line_buf complete! Copy buffer, then add to dictionary
-            // uint32_t length = col_idx + 1;
-            // char *new_buff = calloc(length, sizeof(char));
-            // memcpy(new_buff, line_buf, length);
+            // Finished reading line, add to dictionary
             add_to_dict(&dict, start_of_line);
             
-            if (line_idx < 10) {
-                printf("%s\n", start_of_line);
-            }
+            // if (line_idx < 10) {
+            //     printf("%s\n", start_of_line);
+            // }
 
             file_it++;
             start_of_line = file_it;
             line_idx++;
-            // file_idx++;            
-            // col_idx = 0;
         } else {
-            // if (col_idx >= max_line_length) {
-            //     exit(1);
-            // }            
             (*file_it) = ch;
             file_it++;
-            // col_idx++;
         }
 
         ch = getc(fp);
     }
 
-    printf("Read %d lines.\n", line_idx);
+    // Defensive null character at end of file buffer
+    if (file_it > file_buf && *(file_it - 1) != '\0') {
+        (*file_it) = '\0';
+        file_it++;    
+    }
+    
+    // end_of_file now points immediately after end of the buffer
+    char *end_of_file = file_it;
 
     fclose(fp);
+
+    printf("Read %d lines.\n", line_idx);
+
+
+    /***** Check inputs against dictionary ******/
+    printf("Printing what isn't in the dictionary...\n");
+    start_of_line = file_buf;
+    for (file_it = file_buf; file_it < end_of_file; file_it++) {
+        if (*file_it == '\0') {
+            if (!is_in(dict, start_of_line)) {
+                printf("%s\n", start_of_line);
+            }
+            start_of_line = file_it + 1;
+        }
+    }
+
+    if (!is_in(dict, "not in original usernames")) {
+        printf("not in original usernames\n");
+    }
+    if (!is_in(dict, "also not in original usernames")) {
+        printf("also not in original usernames\n");
+    }
+    if (!is_in(dict, "super also not")) {
+        printf("super also not\n");
+    }
+    if (!is_in(dict, "super super not")) {
+        printf("super super not\n");
+    }
+
     return(0);
 }
 
