@@ -6,4 +6,5 @@ gen_usernames
 usernames.txt
 usernames_100M.txt
 usernames.txt.tmp
-soln_2
+soln_3_chaining_hashmap
+soln_4_open_addressing_hashmap

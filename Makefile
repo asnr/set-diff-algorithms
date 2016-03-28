@@ -10,5 +10,8 @@ usernames.txt: gen_usernames
 gen_usernames: gen_usernames.o
 	$(CXX) -o $@ gen_usernames.o
 
-soln_2: soln_2_c/soln.c
+soln_3_chaining_hashmap: solutions/soln_3_chaining_hashmap.c
+	gcc -O3 -Wall $< -o $@
+
+soln_4_open_addressing_hashmap: solutions/soln_4_open_addressing_hashmap.c
 	gcc -O3 -Wall $< -o $@
