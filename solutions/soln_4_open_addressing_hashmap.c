@@ -3,16 +3,11 @@
 #include <stdint.h>
 #include <string.h>
 
-typedef struct DictEntry
-{
-    struct DictEntry *next;
-    char *val;  // NUL when Dict Entry is empty
-} DictEntry;
-
 typedef struct Dict
 {
-    DictEntry *entries;
+    char **entries;
     uint32_t capacity;
+    uint32_t size;
 } Dict;
 
 Dict init_dict(uint32_t capacity);
@@ -46,9 +41,7 @@ int main(int argc, char *argv[])
     
     FILE *fp = fopen(filename, "r");
     char ch = getc(fp);
-    // This assumes last character is a newline '\n'
     while (ch != EOF) {
-
         if (file_it >= end_of_file_buf) {
             exit(1);
         }
@@ -59,10 +52,6 @@ int main(int argc, char *argv[])
             // Finished reading line, add to dictionary
             add_to_dict(&dict, start_of_line);
             
-            // if (line_idx < 10) {
-            //     printf("%s\n", start_of_line);
-            // }
-
             file_it++;
             start_of_line = file_it;
             line_idx++;
@@ -119,7 +108,8 @@ int main(int argc, char *argv[])
 Dict init_dict(uint32_t capacity) {
     Dict ret;
     ret.capacity = capacity;
-    ret.entries = (DictEntry*) calloc(capacity, sizeof(DictEntry));
+    ret.size = 0;
+    ret.entries = (char**) calloc(capacity, sizeof(char*));
     return(ret);
 }
 
@@ -135,32 +125,47 @@ uint32_t larsons_hash(char* str) {
 // This method does *not* copy str; it is assumed that the memory str points
 // to will not go out of scope/be overwritten.
 void add_to_dict(Dict* dict, char* str) {
-    
+    if (dict->size == dict->capacity) {
+        printf("Dictionary at capacity of %d entries, cannot add more entries.\n",
+               dict->capacity);
+        exit(1);
+    }
+
     uint32_t hash = larsons_hash(str) % (dict->capacity);
 
-    DictEntry *curr_entry = dict->entries + hash;
-    while (curr_entry->val != 0) {
-        if (strcmp(str, curr_entry->val) == 0) {
+    // Find the next available unused address
+    char **end_of_dict = dict->entries + dict->capacity; 
+    char **curr_entry = dict->entries + hash;
+    while (*curr_entry != 0) {
+        if (strcmp(str, *curr_entry) == 0) {
             // str is already in dictionary
             return;
         }
-        curr_entry = curr_entry->next;
+
+        curr_entry++;
+        if (curr_entry >= end_of_dict) {
+            curr_entry = dict->entries;
+        }
     }
 
-    curr_entry->val = str;
-    curr_entry->next = (DictEntry*) calloc(1, sizeof(DictEntry));
+    dict->size++;
+    (*curr_entry) = str;
 }
 
 uint32_t is_in(Dict dict, char* str) {
     uint32_t hash = larsons_hash(str) % (dict.capacity);
 
-    DictEntry *curr_entry = dict.entries + hash;
-    while (curr_entry->val != 0) {
-        if (strcmp(str, curr_entry->val) == 0) {
-            // str is already in dictionary
+    char **end_of_dict = dict.entries + dict.capacity; 
+    char **curr_entry = dict.entries + hash;
+    while (*curr_entry != 0) {
+        if (strcmp(str, *curr_entry) == 0) {
             return(1);
         }
-        curr_entry = curr_entry->next;
+
+        curr_entry++;
+        if (curr_entry >= end_of_dict) {
+            curr_entry = dict.entries;
+        }
     }
     return(0);
 }
